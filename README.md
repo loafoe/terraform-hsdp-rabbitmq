@@ -3,7 +3,10 @@
 # HSDP RabbitMQ module
 
 Module to create a RabbitMQ server deployed on the HSDP Container
-Host infrastructure.
+Host infrastructure. Use this module if you need a version of RabbitMQ
+which is not supported by the [HSDP RabbitMQ Service Broker](https://www.hsdp.io/documentation/rabbitmq/rabbitmq-service-broker)
+
+> This module currently create single-node clusters only!
 
 ```hcl
 module "rabbitmq" {
