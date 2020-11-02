@@ -1,0 +1,32 @@
+#!/bin/bash
+
+kill_rabbitmq() {
+  echo Killing rabbitmq...
+  docker kill rabbitmq
+  docker rm rabbitmq
+}
+
+start_rabbitmq() {
+  LOG_DRIVER=local
+  if [ ! -z "${enable_fluentd}" ]; then
+    LOG_DRIVER=fluentd
+  fi
+  echo Starting rabbitmq...
+  docker run -d -v rabbitmq:/bitnami \
+    --restart always \
+    --name rabbitmq \
+    --env ALLOW_PLAINTEXT_LISTENER=yes \
+    --env RABBITMQ_USERNAME=${admin_username} \
+    --env RABBITMQ_PASSWORD=${admin_password} \
+    --env RABBITMQ_NODE_PORT_NUMBER=10000 \
+    --env RABBITMQ_MANAGER_PORT_NUMBER=10001 \
+    --env RABBITMQ_ID=${rabbitmq_id} \
+    --log-driver=${log_driver} \
+    -p10000:10000 \
+    -p10001:10001 \
+    ${rabbitmq_image}
+}
+
+kill_rabbitmq
+
+start_rabbitmq
