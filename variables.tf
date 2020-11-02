@@ -83,3 +83,9 @@ variable "hsdp_region" {
   type        = string
   default     = "us-east"
 }
+
+variable "hsdp_debug" {
+  description = "Enable debugging of HSDP services"
+  type        = string
+  default     = "false"
+}

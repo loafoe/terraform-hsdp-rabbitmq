@@ -21,6 +21,7 @@ start_fluent_bit() {
     --env HSDP_SECRET_KEY=${secret_key} \
     --env HSDP_CUSTOM_FIELD=${custom_field} \
     --env HSDP_PRODUCT_KEY=${product_key} \
+    --env HSDP_DEBUG=${debug} \
     -p 127.0.0.1:24224:24224 \
     ${fluent_bit_image}
 }
