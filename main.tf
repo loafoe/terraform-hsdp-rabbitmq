@@ -1,5 +1,5 @@
 resource "random_id" "id" {
-  byte_length = 8
+  byte_length = 4
 }
 
 resource "random_password" "password" {
@@ -16,6 +16,7 @@ resource "hsdp_container_host" "rabbitmq" {
   instance_type = var.instance_type
 
   user_groups     = var.user_groups
+  user            = var.user
   security_groups = ["analytics"]
 
   connection {
@@ -33,22 +34,18 @@ resource "hsdp_container_host" "rabbitmq" {
   }
 }
 
-resource "null_resource" "cluster" {
+resource "hsdp_container_host_exec" "rabbitmq" {
   count = var.nodes
 
   triggers = {
     cluster_instance_ids = join(",", hsdp_container_host.rabbitmq.*.id)
   }
+  host         = hsdp_container_host.rabbitmq[count.index].private_ip
+  bastion_host = var.bastion_host
+  user         = var.user
+  agent        = true
 
-  connection {
-    bastion_host = var.bastion_host
-    host         = element(hsdp_container_host.rabbitmq.*.private_ip, count.index)
-    user         = var.user
-    private_key  = var.private_key
-    script_path  = "/home/${var.user}/cluster.bash"
-  }
-
-  provisioner "file" {
+  file {
     content = templatefile("${path.module}/scripts/bootstrap-cluster.sh.tmpl", {
       enable_fluentd = var.hsdp_product_key == "" ? "false" : "true"
       log_driver     = var.hsdp_product_key == "" ? "local" : "fluentd"
@@ -58,9 +55,10 @@ resource "null_resource" "cluster" {
       rabbitmq_id    = random_id.id.hex
     })
     destination = "/home/${var.user}/bootstrap-cluster.sh"
+    permissions = "0700"
   }
 
-  provisioner "file" {
+  file {
     content = templatefile("${path.module}/scripts/bootstrap-fluent-bit.sh.tmpl", {
       ingestor_host    = var.hsdp_ingestor_host
       shared_key       = var.hsdp_shared_key
@@ -71,16 +69,12 @@ resource "null_resource" "cluster" {
       debug            = var.hsdp_debug
     })
     destination = "/home/${var.user}/bootstrap-fluent-bit.sh"
+    permissions = "0700"
   }
 
 
-  provisioner "remote-exec" {
-    # Bootstrap script called with private_ip of each node in the cluster
-    inline = [
-      "chmod +x /home/${var.user}/bootstrap-fluent-bit.sh",
-      "/home/${var.user}/bootstrap-fluent-bit.sh",
-      "chmod +x /home/${var.user}/bootstrap-cluster.sh",
-      "/home/${var.user}/bootstrap-cluster.sh"
-    ]
-  }
+  commands = [
+    "/home/${var.user}/bootstrap-fluent-bit.sh",
+    "/home/${var.user}/bootstrap-cluster.sh"
+  ]
 }

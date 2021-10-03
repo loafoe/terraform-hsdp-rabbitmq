@@ -13,7 +13,7 @@ variable "volume_size" {
 variable "image" {
   description = "The docker image to use"
   type        = string
-  default     = "bitnami/rabbitmq:latest"
+  default     = "bitnami/rabbitmq:3.9.7"
 }
 
 variable "nodes" {
