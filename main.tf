@@ -18,23 +18,9 @@ resource "hsdp_container_host" "rabbitmq" {
   user_groups     = var.user_groups
   user            = var.user
   security_groups = ["analytics"]
-
-  connection {
-    bastion_host = var.bastion_host
-    host         = self.private_ip
-    user         = var.user
-    private_key  = var.private_key
-    script_path  = "/home/${var.user}/bootstrap.bash"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "docker volume create rabbitmq",
-    ]
-  }
 }
 
-resource "hsdp_container_host_exec" "rabbitmq" {
+resource "ssh_resource" "rabbitmq" {
   count = var.nodes
 
   triggers = {
@@ -74,6 +60,7 @@ resource "hsdp_container_host_exec" "rabbitmq" {
 
 
   commands = [
+    "docker volume create rabbitmq || /bin/true",
     "/home/${var.user}/bootstrap-fluent-bit.sh",
     "/home/${var.user}/bootstrap-cluster.sh"
   ]
