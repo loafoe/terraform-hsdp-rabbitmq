@@ -60,7 +60,7 @@ resource "ssh_resource" "rabbitmq" {
 
 
   commands = [
-    "docker volume create rabbitmq || /bin/true",
+    "docker volume create rabbitmq || true",
     "/home/${var.user}/bootstrap-fluent-bit.sh",
     "/home/${var.user}/bootstrap-cluster.sh"
   ]
